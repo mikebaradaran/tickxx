@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>❌✔</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      table {
+        font-size: large;
+        border-collapse: collapse;
+      }
+
+      #mytable tr {
+        border: 1px solid lightblue;
+      }
+
+      #mytable tr > td:nth-child(2) {
+        padding-left: 15px;
+      }
+
+      span {
+        display: inline-block;
+        width: 1.5em;
+        margin-left: 3px;
+        text-align: center;
+      }
+
+      span:hover {
+        box-shadow: 3px 3px 3px gray;
+      }
+
+      button {
+        border-radius: 50%;
+      }
+
+      button:hover {
+        box-shadow: 3px 3px 3px gray;
+      }
+    </style>
+  </head>
+
+  <body>
+    Name:<input type="text" id="txtName" placeholder="Type a name" />
+    <button onclick="deleteAllMessages()" title="Delete all messages">
+      ❌
+    </button>
+    <button onclick="removeStudent()" title="remove student">🧑</button>
+    <button onclick="closeClass()" title="close class">🚫</button>
+    <div id="info"></div>
+    <div id="messages"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      // Handle incoming messages from the server
+      socket.on("messagex", (data) => {
+        let res = "<table id='mytable'>";
+        for (let i = 0; i < data.length; i++) {
+          res += `<tr><td>${data[i].name}</td><td>${data[i].message}</td></tr>`;
+        }
+        res += "</table>";
+        document.getElementById("messages").innerHTML = res + "</table>";
+      });
+
+      function removeStudent() {
+        let name = document.getElementById("txtName").value;
+        if (name.trim().length == 0) {
+          alert("No student name to remove!");
+          return;
+        }
+        if (confirm("Are you sure you want to remove " + name + "?")) {
+          sendCommand("/api/removestudent/" + name);
+        }
+      }
+      function closeClass() {
+        if (confirm("Are you sure you want to close class?")) {
+          sendCommand("/api/kill");
+        }
+      }
+
+      function deleteAllMessages() {
+        if (confirm("Are you sure you want delete all messages?")) {
+          sendCommand("/api/wipe");
+        }
+      }
+
+      function sendCommand(command) {
+        fetch("https://tickx.glitch.me/" + command, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            showMessage(`Command sent:${data.message}`);
+          })
+          .catch((error) => {
+            showMessage("Error:" + error);
+          });
+      }
+
+      function showMessage(msg) {
+        document.getElementById("info").innerHTML = msg;
+      }
+    </script>
+  </body>
+</html>

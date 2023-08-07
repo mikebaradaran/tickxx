@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>❌✔</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    table {
+      font-size: large;
+      border-collapse: collapse;
+    }
+
+    #mytable tr {
+      border: 1px solid lightblue;
+    }
+
+    #mytable tr>td:nth-child(2) {
+      padding-left: 15px;
+    }
+
+    span {
+      display: inline-block;
+      width: 1.5em;
+      margin-left: 3px;
+      text-align: center;
+    }
+
+    span:hover {
+      box-shadow: 3px 3px 3px gray;
+    }
+
+    button {
+      border-radius: 50%;
+    }
+
+    button:hover {
+      box-shadow: 3px 3px 3px gray;
+    }
+  </style>
+
+</head>
+
+<body>
+  <table>
+    <tr>
+      <td>Room:</td>
+      <td><input type="text" id="txtRoom" placeholder="Type your room name" /></td>
+    </tr>
+    <tr>
+      <td>Name:</td>
+      <td><input type="text" id="txtName" placeholder="Type your name" /></td>
+    </tr>
+    <tr>
+      <td>Message:</td>
+      <td><input type="text" id="txtMessage" placeholder="press return  or click ▶" /></td>
+      <td><button onclick="sendMessage()">▶</button></td>
+    </tr>
+  </table>
+
+  <div id="icons">
+    <span>❌</span><span>✔</span><span>☕</span><span>👍</span><span>✋</span><span>😊</span>
+  </div>
+  <hr />
+  <div id="messages"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    var room = "room1";
+
+    socket.on('connect', function () {
+      socket.emit('room', room);
+    });
+
+    // Handle incoming messages from the server
+    socket.on("messagex", (data) => {
+      displayMessages(data);
+    });
+
+    // Function to send a message to the server
+    const txtRoom = document.getElementById("txtRoom");
+    const txtName = document.getElementById("txtName");
+    const txtMessage = document.getElementById("txtMessage");
+
+    function sendMessage() {
+      let stuName = txtName.value.trim();
+      if (stuName.length == 0) {
+        alert("please type you name");
+        txtName.focus();
+        return;
+      }
+
+      socket.emit("message", {
+        room: txtRoom.value,
+        name: stuName,
+        message: txtMessage.value,
+      });
+      txtMessage.value = "";
+      txtMessage.focus();
+    }
+
+    txtMessage.addEventListener("keyup", (event) => {
+      if (event.keyCode === 13) sendMessage();
+    });
+
+    let spans = document.querySelectorAll("#icons span");
+    spans.forEach((span) =>
+      span.addEventListener("click", () => {
+        txtMessage.value += span.innerHTML;
+        txtMessage.focus();
+      })
+    );
+
+    function displayMessages(data) {
+      let res = "<table id='mytable'>";
+      for (let i = 0; i < data.length; i++) {
+        res += `<tr><td>${data[i].room}</td>`;
+        res += `<td>${data[i].name}</td><td>${data[i].message}</td></tr>`;
+      }
+      res += "</table>";
+      document.getElementById("messages").innerHTML = res + "</table>";
+    }
+  </script>
+</body>
+
+</html>
